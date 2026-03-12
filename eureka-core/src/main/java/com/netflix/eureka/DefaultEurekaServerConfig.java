@@ -91,6 +91,8 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private static final java.util.concurrent.ConcurrentHashMap<String, DynamicStringProperty> awsSecretPropCache =
+                new java.util.concurrent.ConcurrentHashMap<>();
 
     public DefaultEurekaServerConfig() {
         init();
@@ -146,8 +148,15 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
      */
     @Override
     public String getAWSSecretKey() {
-        String aWSSecretKey = configInstance.getStringProperty(
-                namespace + "awsSecretKey", null).get();
+        String key = namespace + "awsSecretKey";
+        DynamicStringProperty prop = awsSecretPropCache.get(key);
+        if (prop == null) {
+            DynamicStringProperty newProp = configInstance.getStringProperty(key, null);
+            DynamicStringProperty existing = awsSecretPropCache.putIfAbsent(key, newProp);
+            prop = (existing == null) ? newProp : existing;
+        }
+
+        String aWSSecretKey = prop.get();
 
         if (null != aWSSecretKey) {
             return aWSSecretKey.trim();
