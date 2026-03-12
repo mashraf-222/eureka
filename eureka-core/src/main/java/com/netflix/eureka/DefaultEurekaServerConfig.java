@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicStringProperty awsSecretKeyProperty;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -146,8 +147,13 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
      */
     @Override
     public String getAWSSecretKey() {
-        String aWSSecretKey = configInstance.getStringProperty(
-                namespace + "awsSecretKey", null).get();
+        DynamicStringProperty prop = awsSecretKeyProperty;
+        if (prop == null) {
+            prop = configInstance.getStringProperty(namespace + "awsSecretKey", null);
+            awsSecretKeyProperty = prop;
+        }
+
+        String aWSSecretKey = prop.get();
 
         if (null != aWSSecretKey) {
             return aWSSecretKey.trim();
