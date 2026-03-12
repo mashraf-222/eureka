@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile com.netflix.config.DynamicLongProperty evictionIntervalTimerProperty;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -312,8 +313,18 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public long getEvictionIntervalTimerInMs() {
-        return configInstance.getLongProperty(
-                namespace + "evictionIntervalTimerInMs", (60 * 1000)).get();
+        // Use a cached DynamicLongProperty to avoid allocating a new property object each call.
+        com.netflix.config.DynamicLongProperty prop = evictionIntervalTimerProperty;
+        if (prop == null) {
+            synchronized (this) {
+                prop = evictionIntervalTimerProperty;
+                if (prop == null) {
+                    prop = configInstance.getLongProperty(namespace + "evictionIntervalTimerInMs", (60 * 1000));
+                    evictionIntervalTimerProperty = prop;
+                }
+            }
+        }
+        return prop.get();
     }
 
     @Override
