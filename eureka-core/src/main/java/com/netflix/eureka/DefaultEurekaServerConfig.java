@@ -91,6 +91,8 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile com.netflix.config.DynamicLongProperty retentionTimeInMSInDeltaQueueProp;
+    private volatile String retentionTimeInMSInDeltaQueueKey;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -298,9 +300,19 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public long getRetentionTimeInMSInDeltaQueue() {
-        return configInstance.getLongProperty(
-                namespace + "retentionTimeInMSInDeltaQueue", (3 * 60 * 1000))
-                .get();
+        String key = namespace + "retentionTimeInMSInDeltaQueue";
+        com.netflix.config.DynamicLongProperty prop = retentionTimeInMSInDeltaQueueProp;
+        if (prop == null || !key.equals(retentionTimeInMSInDeltaQueueKey)) {
+            synchronized (this) {
+                prop = retentionTimeInMSInDeltaQueueProp;
+                if (prop == null || !key.equals(retentionTimeInMSInDeltaQueueKey)) {
+                    prop = configInstance.getLongProperty(key, (3 * 60 * 1000));
+                    retentionTimeInMSInDeltaQueueProp = prop;
+                    retentionTimeInMSInDeltaQueueKey = key;
+                }
+            }
+        }
+        return prop.get();
     }
 
     @Override
