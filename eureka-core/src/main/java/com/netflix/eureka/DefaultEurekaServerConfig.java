@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicIntProperty eipBindingRetryIntervalMsWhenUnboundProp;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -175,8 +176,18 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
      */
     @Override
     public int getEIPBindingRetryIntervalMsWhenUnbound() {
-        return configInstance.getIntProperty(
-                namespace + "eipBindRebindRetryIntervalMsWhenUnbound", (1 * 60 * 1000)).get();
+        DynamicIntProperty p = eipBindingRetryIntervalMsWhenUnboundProp;
+        if (p == null) {
+            synchronized (this) {
+                p = eipBindingRetryIntervalMsWhenUnboundProp;
+                if (p == null) {
+                    p = configInstance.getIntProperty(
+                            namespace + "eipBindRebindRetryIntervalMsWhenUnbound", (1 * 60 * 1000));
+                    eipBindingRetryIntervalMsWhenUnboundProp = p;
+                }
+            }
+        }
+        return p.get();
     }
 
     /*
