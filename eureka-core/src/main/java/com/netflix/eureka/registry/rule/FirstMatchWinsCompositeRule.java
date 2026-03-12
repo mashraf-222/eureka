@@ -22,12 +22,21 @@ public class FirstMatchWinsCompositeRule implements InstanceStatusOverrideRule {
         this.rules = rules;
         this.defaultRule = new AlwaysMatchInstanceStatusRule();
         // Let's build up and "cache" the rule name to be used by toString();
-        List<String> ruleNames = new ArrayList<>(rules.length+1);
+        // Build directly with StringBuilder to avoid allocating an intermediate List.
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
         for (int i = 0; i < rules.length; ++i) {
-            ruleNames.add(rules[i].toString());
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(rules[i].toString());
         }
-        ruleNames.add(defaultRule.toString());
-        compositeRuleName = ruleNames.toString();
+        if (rules.length > 0) {
+            sb.append(", ");
+        }
+        sb.append(defaultRule.toString());
+        sb.append(']');
+        compositeRuleName = sb.toString();
     }
 
     @Override
