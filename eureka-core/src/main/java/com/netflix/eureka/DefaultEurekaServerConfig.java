@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicStringProperty awsAccessIdProp;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -128,15 +129,18 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
      */
     @Override
     public String getAWSAccessId() {
-        String aWSAccessId = configInstance.getStringProperty(
-                namespace + "awsAccessId", null).get();
-
-        if (null != aWSAccessId) {
-            return aWSAccessId.trim();
-        } else {
-            return null;
+        DynamicStringProperty prop = awsAccessIdProp;
+        if (prop == null) {
+            synchronized (this) {
+                prop = awsAccessIdProp;
+                if (prop == null) {
+                    prop = configInstance.getStringProperty(namespace + "awsAccessId", null);
+                    awsAccessIdProp = prop;
+                }
+            }
         }
-
+        String aWSAccessId = prop.get();
+        return aWSAccessId == null ? null : aWSAccessId.trim();
     }
 
     /*
