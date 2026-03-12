@@ -51,6 +51,7 @@ public class ReplicationList {
 
     @Override
     public int hashCode() {
-        return replicationList != null ? replicationList.hashCode() : 0;
+        List<ReplicationInstance> list = this.replicationList;
+        return list != null ? list.hashCode() : 0;
     }
 }
