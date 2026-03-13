@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicIntProperty expectedClientRenewalIntervalSecondsProp;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -229,9 +230,19 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
      */
     @Override
     public int getExpectedClientRenewalIntervalSeconds() {
-        final int configured = configInstance.getIntProperty(
-                namespace + "expectedClientRenewalIntervalSeconds",
-                30).get();
+        DynamicIntProperty prop = expectedClientRenewalIntervalSecondsProp;
+        if (prop == null) {
+            // Lazily create and cache the DynamicIntProperty; keep it dynamic so runtime updates still apply.
+            String key = namespace + "expectedClientRenewalIntervalSeconds";
+            DynamicIntProperty created = configInstance.getIntProperty(key, 30);
+            synchronized (this) {
+                if (expectedClientRenewalIntervalSecondsProp == null) {
+                    expectedClientRenewalIntervalSecondsProp = created;
+                }
+                prop = expectedClientRenewalIntervalSecondsProp;
+            }
+        }
+        final int configured = prop.get();
         return configured > 0 ? configured : 30;
     }
 
