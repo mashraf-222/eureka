@@ -91,6 +91,8 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicBooleanProperty cachedShouldBatch;
+    private volatile String cachedShouldBatchNamespace;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -606,7 +608,22 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public boolean shouldBatchReplication() {
-        return configInstance.getBooleanProperty(namespace + "shouldBatchReplication", false).get();
+        String ns = namespace;
+        DynamicBooleanProperty prop = cachedShouldBatch;
+        // Fast path: cached and namespace matches (reference or equals)
+        if (prop != null && (ns == cachedShouldBatchNamespace || (ns != null && ns.equals(cachedShouldBatchNamespace)))) {
+            return prop.get();
+        }
+        // Initialize or refresh cache for this namespace
+        synchronized (this) {
+            prop = cachedShouldBatch;
+            if (prop == null || !(ns == cachedShouldBatchNamespace || (ns != null && ns.equals(cachedShouldBatchNamespace)))) {
+                prop = configInstance.getBooleanProperty(ns + "shouldBatchReplication", false);
+                cachedShouldBatch = prop;
+                cachedShouldBatchNamespace = ns;
+            }
+            return prop.get();
+        }
     }
 
     @Override
