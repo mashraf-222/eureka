@@ -72,6 +72,6 @@ public class ServerRequestAuthFilter implements Filter {
 
     protected String getHeader(HttpServletRequest request, String headerKey) {
         String value = request.getHeader(headerKey);
-        return Strings.isNullOrEmpty(value) ? UNKNOWN : value;
+        return (value == null || value.length() == 0) ? UNKNOWN : value;
     }
 }
