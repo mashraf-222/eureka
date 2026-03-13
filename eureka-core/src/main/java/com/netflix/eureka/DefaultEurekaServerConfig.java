@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicIntProperty maxThreadsForStatusReplicationProp;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -379,8 +380,17 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public int getMaxThreadsForStatusReplication() {
-        return configInstance.getIntProperty(
-                namespace + "maxThreadsForStatusReplication", 1).get();
+        DynamicIntProperty prop = maxThreadsForStatusReplicationProp;
+        if (prop == null) {
+            synchronized (this) {
+                prop = maxThreadsForStatusReplicationProp;
+                if (prop == null) {
+                    prop = configInstance.getIntProperty(namespace + "maxThreadsForStatusReplication", 1);
+                    maxThreadsForStatusReplicationProp = prop;
+                }
+            }
+        }
+        return prop.get();
     }
 
     @Override
