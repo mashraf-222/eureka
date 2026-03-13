@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicStringProperty jsonCodecNameProp;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -621,8 +622,17 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public String getJsonCodecName() {
-        return configInstance.getStringProperty(
-                namespace + "jsonCodecName", null).get();
+        DynamicStringProperty prop = jsonCodecNameProp;
+        if (prop == null) {
+            synchronized (this) {
+                prop = jsonCodecNameProp;
+                if (prop == null) {
+                    prop = configInstance.getStringProperty(namespace + "jsonCodecName", null);
+                    jsonCodecNameProp = prop;
+                }
+            }
+        }
+        return prop.get();
     }
 
     @Override
