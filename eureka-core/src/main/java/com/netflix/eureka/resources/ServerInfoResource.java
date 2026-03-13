@@ -20,6 +20,7 @@ import java.util.Map;
 @Path("/serverinfo")
 public class ServerInfoResource {
     private final PeerAwareInstanceRegistry registry;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     ServerInfoResource(EurekaServerContext server) {
@@ -35,7 +36,6 @@ public class ServerInfoResource {
     public Response getOverrides() throws Exception {
         Map<String, InstanceInfo.InstanceStatus> result = registry.overriddenInstanceStatusesSnapshot();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         String responseStr = objectMapper.writeValueAsString(result);
         return Response.ok(responseStr).build();
     }
