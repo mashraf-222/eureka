@@ -45,8 +45,16 @@ public class ReplicationList {
 
         ReplicationList that = (ReplicationList) o;
 
-        return !(replicationList != null ? !replicationList.equals(that.replicationList) : that.replicationList != null);
+        List<ReplicationInstance> thisList = this.replicationList;
+        List<ReplicationInstance> thatList = that.replicationList;
 
+        if (thisList == thatList) {
+            return true;
+        }
+        if (thisList == null || thatList == null) {
+            return false;
+        }
+        return thisList.equals(thatList);
     }
 
     @Override
