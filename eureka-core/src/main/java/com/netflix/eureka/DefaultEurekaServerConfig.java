@@ -91,6 +91,7 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile DynamicStringProperty remoteRegionTrustStoreProp;
 
     public DefaultEurekaServerConfig() {
         init();
@@ -587,8 +588,17 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public String getRemoteRegionTrustStore() {
-        return configInstance.getStringProperty(
-                namespace + "remoteRegion.trustStoreFileName", "").get();
+        DynamicStringProperty prop = remoteRegionTrustStoreProp;
+        if (prop == null) {
+            synchronized (this) {
+                prop = remoteRegionTrustStoreProp;
+                if (prop == null) {
+                    prop = configInstance.getStringProperty(namespace + "remoteRegion.trustStoreFileName", "");
+                    remoteRegionTrustStoreProp = prop;
+                }
+            }
+        }
+        return prop.get();
 
     }
 
