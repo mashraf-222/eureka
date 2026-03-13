@@ -91,14 +91,18 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private volatile String cachedMyUrl;
+    private volatile boolean myUrlCallbackRegistered = false;
 
     public DefaultEurekaServerConfig() {
         init();
+        initMyUrlCache();
     }
 
     public DefaultEurekaServerConfig(String namespace) {
         this.namespace = namespace;
         init();
+        initMyUrlCache();
     }
 
     private void init() {
@@ -609,9 +613,23 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
         return configInstance.getBooleanProperty(namespace + "shouldBatchReplication", false).get();
     }
 
+    private void initMyUrlCache() {
+        try {
+            cachedMyUrl = myUrl.get();
+            myUrl.addCallback(() -> cachedMyUrl = myUrl.get());
+            myUrlCallbackRegistered = true;
+        } catch (Throwable t) {
+            // If registering a callback isn't supported or fails for any reason,
+            // fall back to direct reads. Swallow exceptions to preserve original behavior.
+            myUrlCallbackRegistered = false;
+        }
+    }
+
     @Override
     public String getMyUrl() {
-        return myUrl.get();
+        // If callback registered successfully, return the cached value (fast volatile read).
+        // Otherwise, fallback to calling myUrl.get() (original behavior).
+        return myUrlCallbackRegistered ? cachedMyUrl : myUrl.get();
     }
 
     @Override
