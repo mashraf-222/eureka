@@ -133,14 +133,9 @@ public class PeerEurekaNodes {
         List<String> replicaUrls = EndpointUtils
                 .getDiscoveryServiceUrls(clientConfig, zone, new EndpointUtils.InstanceInfoBasedUrlRandomizer(myInfo));
 
-        int idx = 0;
-        while (idx < replicaUrls.size()) {
-            if (isThisMyUrl(replicaUrls.get(idx))) {
-                replicaUrls.remove(idx);
-            } else {
-                idx++;
-            }
-        }
+        // Use removeIf to avoid O(n^2) behavior from repeated indexed removes.
+        replicaUrls.removeIf(this::isThisMyUrl);
+
         return replicaUrls;
     }
 
