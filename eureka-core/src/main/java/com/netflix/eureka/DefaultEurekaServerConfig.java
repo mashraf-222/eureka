@@ -91,6 +91,8 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
             configInstance.getStringProperty(namespace + "listAutoScalingGroupsRoleName", "ListAutoScalingGroups");
 
     private final DynamicStringProperty myUrl = configInstance.getStringProperty(namespace + "myUrl", null);
+    private final java.util.concurrent.ConcurrentHashMap<String, DynamicStringProperty> experimentalCache =
+                new java.util.concurrent.ConcurrentHashMap<>();
 
     public DefaultEurekaServerConfig() {
         init();
@@ -694,7 +696,9 @@ public class DefaultEurekaServerConfig implements EurekaServerConfig {
 
     @Override
     public String getExperimental(String name) {
-        return configInstance.getStringProperty(namespace + "experimental." + name, null).get();
+        String key = namespace + "experimental." + name;
+        DynamicStringProperty prop = experimentalCache.computeIfAbsent(key, k -> configInstance.getStringProperty(k, null));
+        return prop.get();
     }
 
     @Override
