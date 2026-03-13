@@ -123,26 +123,21 @@ public class PeerEurekaNodes {
     }
 
     /**
-     * Resolve peer URLs.
-     *
-     * @return peer URLs with node's own URL filtered out
-     */
-    protected List<String> resolvePeerUrls() {
-        InstanceInfo myInfo = applicationInfoManager.getInfo();
-        String zone = InstanceInfo.getZone(clientConfig.getAvailabilityZones(clientConfig.getRegion()), myInfo);
-        List<String> replicaUrls = EndpointUtils
-                .getDiscoveryServiceUrls(clientConfig, zone, new EndpointUtils.InstanceInfoBasedUrlRandomizer(myInfo));
+         * Resolve peer URLs.
+         *
+         * @return peer URLs with node's own URL filtered out
+         */
+        protected List<String> resolvePeerUrls() {
+            InstanceInfo myInfo = applicationInfoManager.getInfo();
+            String zone = InstanceInfo.getZone(clientConfig.getAvailabilityZones(clientConfig.getRegion()), myInfo);
+            List<String> replicaUrls = EndpointUtils
+                    .getDiscoveryServiceUrls(clientConfig, zone, new EndpointUtils.InstanceInfoBasedUrlRandomizer(myInfo));
 
-        int idx = 0;
-        while (idx < replicaUrls.size()) {
-            if (isThisMyUrl(replicaUrls.get(idx))) {
-                replicaUrls.remove(idx);
-            } else {
-                idx++;
-            }
+            // Use removeIf which performs removals with an iterator (O(n)),
+            // avoiding the O(n^2) behavior of repeatedly removing by index from an ArrayList.
+            replicaUrls.removeIf(this::isThisMyUrl);
+            return replicaUrls;
         }
-        return replicaUrls;
-    }
 
     /**
      * Given new set of replica URLs, destroy {@link PeerEurekaNode}s no longer available, and
