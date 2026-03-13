@@ -46,6 +46,7 @@ public class InstancesResource {
             .getLogger(InstancesResource.class);
 
     private final PeerAwareInstanceRegistry registry;
+    private static final Response NOT_FOUND_RESPONSE = Response.status(Status.NOT_FOUND).build();
 
     @Inject
     InstancesResource(EurekaServerContext server) {
@@ -67,7 +68,7 @@ public class InstancesResource {
             return Response.ok(list.get(0)).build();
         } else {
             logger.info("Not Found: {}", id);
-            return Response.status(Status.NOT_FOUND).build();
+            return NOT_FOUND_RESPONSE;
         }
     }
 }
