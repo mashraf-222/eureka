@@ -44,7 +44,10 @@ public final class EurekaModule extends AbstractModule {
 
     @Override
     public boolean equals(Object obj) {
-        return obj != null && getClass().equals(obj.getClass());
+        if (this == obj) {
+            return true;
+        }
+        return obj != null && obj.getClass() == getClass();
     }
 
     @Override
