@@ -36,19 +36,20 @@ public class EurekaHttpResponse<T> {
     protected EurekaHttpResponse(int statusCode, T entity) {
         this.statusCode = statusCode;
         this.entity = entity;
-        this.headers = null;
+        this.headers = Collections.<String, String>emptyMap();
         this.location = null;
     }
 
     private EurekaHttpResponse(EurekaHttpResponseBuilder<T> builder) {
         this.statusCode = builder.statusCode;
         this.entity = builder.entity;
-        this.headers = builder.headers;
+        Map<String, String> h = builder.headers;
+        this.headers = (h == null) ? Collections.<String, String>emptyMap() : h;
 
-        if (headers != null) {
-            String locationValue = headers.get(HttpHeaders.LOCATION);
+        String locationValue = this.headers.get(HttpHeaders.LOCATION);
+        if (locationValue != null) {
             try {
-                this.location = locationValue == null ? null : new URI(locationValue);
+                this.location = new URI(locationValue);
             } catch (URISyntaxException e) {
                 throw new TransportException("Invalid Location header value in response; cannot complete the request (location="
                         + locationValue + ')', e);
@@ -67,7 +68,7 @@ public class EurekaHttpResponse<T> {
     }
 
     public Map<String, String> getHeaders() {
-        return headers == null ? Collections.<String, String>emptyMap() : headers;
+        return headers;
     }
 
     public T getEntity() {
