@@ -43,10 +43,13 @@ public class EurekaHttpResponse<T> {
     private EurekaHttpResponse(EurekaHttpResponseBuilder<T> builder) {
         this.statusCode = builder.statusCode;
         this.entity = builder.entity;
-        this.headers = builder.headers;
 
-        if (headers != null) {
-            String locationValue = headers.get(HttpHeaders.LOCATION);
+        // Cache builder.headers locally to avoid repeated field accesses
+        Map<String, String> h = builder.headers;
+        this.headers = h;
+
+        if (h != null) {
+            String locationValue = h.get(HttpHeaders.LOCATION);
             try {
                 this.location = locationValue == null ? null : new URI(locationValue);
             } catch (URISyntaxException e) {
