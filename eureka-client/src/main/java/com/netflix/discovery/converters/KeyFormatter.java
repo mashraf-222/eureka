@@ -34,10 +34,26 @@ public class KeyFormatter {
     }
 
     public String formatKey(String keyTemplate) {
-        StringBuilder sb = new StringBuilder(keyTemplate.length() + 1);
-        for (char c : keyTemplate.toCharArray()) {
+        // Use charAt loop to avoid creating a temporary char[] from toCharArray().
+        int len = keyTemplate.length();
+        StringBuilder sb = new StringBuilder(len + 1);
+
+        String repl = this.replacement;
+        boolean replIsNull = (repl == null);
+        int replLen = replIsNull ? 4 : repl.length(); // "null" length is 4 when repl == null
+
+        for (int i = 0; i < len; i++) {
+            char c = keyTemplate.charAt(i);
             if (c == '_') {
-                sb.append(replacement);
+                if (replIsNull) {
+                    sb.append("null");
+                } else if (replLen == 1) {
+                    sb.append(repl.charAt(0));
+                } else if (replLen == 0) {
+                    // append nothing for empty replacement
+                } else {
+                    sb.append(repl);
+                }
             } else {
                 sb.append(c);
             }
