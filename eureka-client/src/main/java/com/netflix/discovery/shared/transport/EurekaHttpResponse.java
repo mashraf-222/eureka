@@ -45,13 +45,17 @@ public class EurekaHttpResponse<T> {
         this.entity = builder.entity;
         this.headers = builder.headers;
 
-        if (headers != null) {
-            String locationValue = headers.get(HttpHeaders.LOCATION);
-            try {
-                this.location = locationValue == null ? null : new URI(locationValue);
-            } catch (URISyntaxException e) {
-                throw new TransportException("Invalid Location header value in response; cannot complete the request (location="
-                        + locationValue + ')', e);
+        if (this.headers != null) {
+            String locationValue = this.headers.get(HttpHeaders.LOCATION);
+            if (locationValue == null) {
+                this.location = null;
+            } else {
+                try {
+                    this.location = new URI(locationValue);
+                } catch (URISyntaxException e) {
+                    throw new TransportException("Invalid Location header value in response; cannot complete the request (location="
+                            + locationValue + ')', e);
+                }
             }
         } else {
             this.location = null;
