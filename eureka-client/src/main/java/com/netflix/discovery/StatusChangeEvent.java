@@ -22,7 +22,11 @@ public class StatusChangeEvent extends DiscoveryEvent {
      * @return true if current is up or false for ALL other current values
      */
     public boolean isUp() {
-        return this.current.equals(InstanceInfo.InstanceStatus.UP);
+        if (this.current == null) {
+            // Preserve original behavior which would throw NullPointerException
+            throw new NullPointerException();
+        }
+        return this.current == InstanceInfo.InstanceStatus.UP;
     }
 
     /**
